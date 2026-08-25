@@ -14,9 +14,9 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+          targets: aarch64-linux-android
 
-      - name: Install Android NDK
+      - name: Setup Android NDK
         uses: android-actions/setup-android@v3
 
       - name: Install cargo-apk
@@ -28,5 +28,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gym-fitness-tracker-rust-apk
+          name: rust-gym-apk
           path: target/release/*.apk

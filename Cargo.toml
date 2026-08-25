@@ -1,5 +1,5 @@
 [package]
-name = \ gym-fitness-tracker\
+name = " gym-fitness-tracker\
 version = \0.1.0\
 edition = \2021\
 
@@ -7,6 +7,4 @@ edition = \2021\
 crate-type = [\cdylib\]
 
 [dependencies]
-android-activity = \0.5\
-ndk-context = \0.1\
-ndk-glue = \0.3\
+
