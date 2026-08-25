@@ -1,6 +1,6 @@
-import React, { useState } from \ react\;
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from \react-native\;
-import { Card, ActionButton } from \../components/UI\;
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { Card, ActionButton } from '../components/UI';
 
 export default function ActiveWorkout() {
   const [sets, setSets] = useState([]);
@@ -11,10 +11,10 @@ export default function ActiveWorkout() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>GYM TRACKER</Text>
+      <Text style={styles.title}>APEXFIT</Text>
       <Card>
         <Text style={styles.exName}>Bench Press</Text>
-        <ActionButton label=\Log Set\ onPress={addSet} />
+        <ActionButton label="Log Set" onPress={addSet} />
       </Card>
       <FlatList 
         data={sets}
@@ -31,10 +31,10 @@ export default function ActiveWorkout() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: \#0a0a0a\, padding: 24, paddingTop: 60 },
-  title: { color: \#00ffcc\, fontSize: 32, fontWeight: \bold\, textAlign: \center\, marginBottom: 20 },
-  exName: { color: \#fff\, fontSize: 20, fontWeight: \bold\, marginBottom: 10 },
-  setRow: { backgroundColor: \#1a1a1a\, padding: 16, borderRadius: 12, marginBottom: 10, flexDirection: \row\, justifyContent: \space-between\ },
-  setText: { color: \#fff\, fontWeight: \bold\ },
-  setDetails: { color: \#00ffcc\, fontWeight: \bold\ },
+  container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, paddingTop: 60 },
+  title: { color: '#00ffcc', fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  exName: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  setRow: { backgroundColor: '#1a1a1a', padding: 16, borderRadius: 12, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between' },
+  setText: { color: '#fff', fontWeight: 'bold' },
+  setDetails: { color: '#00ffcc', fontWeight: 'bold' },
 });
