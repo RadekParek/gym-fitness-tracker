@@ -1,16 +1,43 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
+import { supabase } from '@/lib/supabase';
+import { generateProfileCode } from '@/lib/profile-code';
 
 export default function ClientDetailsScreen() {
   const router = useRouter();
   const [gender, setGender] = useState('');
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleFinish = () => {
-    router.push('/(auth)/finish-setup');
+  const handleFinish = async () => {
+    setLoading(true);
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError || new Error('User not found');
+
+      const profileCode = generateProfileCode();
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          gender,
+          height: parseFloat(height),
+          weight: parseFloat(weight),
+          profile_code: profileCode,
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      router.push('/(auth)/finish-setup');
+    } catch (error: any) {
+      Alert.alert('Chyba', error.message || 'Niebolo možné uložiť detaily.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,8 +75,12 @@ export default function ClientDetailsScreen() {
           />
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleFinish}>
-          <Text style={styles.buttonText}>Dokončiť setup</Text>
+        <TouchableOpacity 
+          style={[styles.button, loading && { opacity: 0.7 }]} 
+          onPress={handleFinish} 
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>{loading ? 'Uložíme...' : 'Dokončiť setup'}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

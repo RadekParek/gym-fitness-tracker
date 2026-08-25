@@ -1,12 +1,36 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Share } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Share, ActivityIndicator } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileScreen() {
-  // Mock role - in real app this comes from Supabase/Auth
-  const [userRole, setUserRole] = useState<'client' | 'coach'>('client');
-  const [profileCode] = useState('APEX-7742-X');
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    async function getProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getProfile();
+  }, []);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -16,19 +40,33 @@ export default function ProfileScreen() {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.dark.tint} />
+      </View>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: Colors.dark.text }}>Profil nebol nájdený.</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Profile Header */}
-      <View style={styles.header}>
+      {/* Profile Header */}\n      <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <Ionicons name="person-circle" size={100} color={Colors.dark.tint} />
         </View>
-        <Text style={styles.userName}>ALEX SMITH</Text>
-        <Text style={styles.userRole}>{userRole === 'client' ? 'KLIENT' : 'TRENÉR'}</Text>
+        <Text style={styles.userName}>{profile.username?.toUpperCase() || 'BEZ MENA'}</Text>
+        <Text style={styles.userRole}>{profile.role === 'client' ? 'KLIENT' : 'TRENÉR'}</Text>
       </View>
 
-      {/* Stats Grid */}
-      <View style={styles.statsGrid}>
+      {/* Stats Grid */}\n      <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>24</Text>
           <Text style={styles.statLabel}>TRÉNINGY</Text>
@@ -43,40 +81,39 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* User Details */}
-      <View style={styles.section}>
+      {/* User Details */}\n      <View style={styles.section}>
         <Text style={styles.sectionTitle}>OSOBNÉ ÚD AJE</Text>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Váha</Text>
-          <Text style={styles.detailValue}>82 kg</Text>
+          <Text style={styles.detailValue}>{profile.weight ? `${profile.weight} kg` : 'N/A'}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Výška</Text>
-          <Text style={styles.detailValue}>185 cm</Text>
+          <Text style={styles.detailValue}>{profile.height ? `${profile.height} cm` : 'N/A'}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Pohlavie</Text>
-          <Text style={styles.detailValue}>Muž</Text>
+          <Text style={styles.detailValue}>{profile.gender || 'N/A'}</Text>
         </View>
       </View>
 
-      {/* Coach Only Section */}
-      {userRole === 'coach' && (
+      {/* Coach Only Section */}\n      {profile.role === 'coach' && (
         <View style={[styles.section, styles.coachSection]}>
           <Text style={styles.sectionTitle}>SPRÁVA KLIENTOV</Text>
           <View style={styles.codeContainer}>
             <Text style={styles.codeLabel}>Môj unikátny kód:</Text>
-            <Text style={styles.profileCode}>{profileCode}</Text>
+            <Text style={styles.profileCode}>{profile.profile_code || 'GENERUJE SA...'}</Text>
           </View>
-          <TouchableOpacity style={styles.shareButton} onPress={() => copyToClipboard(profileCode)}>
-            <Ionicons name="share-social-outline" size={20} color="#000" />
-            <Text style={styles.shareButtonText}>ZDIEĽAŤ KÓD</Text>
-          </TouchableOpacity>
+          {profile.profile_code && (
+            <TouchableOpacity style={styles.shareButton} onPress={() => copyToClipboard(profile.profile_code)}>
+              <Ionicons name="share-social-outline" size={20} color="#000" />
+              <Text style={styles.shareButtonText}>ZDIEĽAŤ KÓD</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
-      {/* Settings / Logout */}
-      <View style={styles.footer}>
+      {/* Settings / Logout */}\n      <View style={styles.footer}>
         <TouchableOpacity style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={20} color={Colors.dark.textMuted} />
           <Text style={styles.logoutText}>ODHLÁSIŤ SA</Text>
