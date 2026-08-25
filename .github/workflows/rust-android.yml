@@ -1,0 +1,32 @@
+name: Rust Android APK Build
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+
+      - name: Install Android NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install cargo-apk
+        run: cargo install cargo-apk
+
+      - name: Build APK
+        run: cargo apk build --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gym-fitness-tracker-rust-apk
+          path: target/release/*.apk
