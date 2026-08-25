@@ -1,4 +1,3 @@
----
 -- Enable UUID extension
 create extension if not exists 'uuid-ossp';
 
@@ -7,6 +6,14 @@ create table profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique not null,
   avatar_url text,
+  role text check (role in ('trainer', 'customer')) not null default 'customer',
+  dob date,
+  gender text,
+  weight float,
+  height float,
+  profile_code text unique,
+  is_public boolean default true,
+  trainer_id uuid references profiles(id),
   updated_at timestamp with time zone default now()
 );
 
@@ -43,7 +50,16 @@ create table workout_sets (
   created_at timestamp with time zone default now()
 );
 
--- 5. GROUPS
+-- 5. WORKOUT_COMMENTS
+create table workout_comments (
+  id uuid default uuid_generate_v4() primary key,
+  workout_id uuid references workouts(id) on delete cascade not null,
+  trainer_id uuid references profiles(id) on delete cascade not null,
+  comment_text text not null,
+  created_at timestamp with time zone default now()
+);
+
+-- 6. GROUPS
 create table groups (
   id uuid default uuid_generate_v4() primary key,
   name text not null,
@@ -52,7 +68,7 @@ create table groups (
   created_at timestamp with time zone default now()
 );
 
--- 6. GROUP_MEMBERS
+-- 7. GROUP_MEMBERS
 create table group_members (
   group_id uuid references groups(id) on delete cascade not null,
   user_id uuid references profiles(id) on delete cascade not null,
@@ -60,7 +76,7 @@ create table group_members (
   primary key (group_id, user_id)
 );
 
--- 7. GROUP_POSTS
+-- 8. GROUP_POSTS
 create table group_posts (
   id uuid default uuid_generate_v4() primary key,
   group_id uuid references groups(id) on delete cascade not null,
@@ -74,6 +90,7 @@ alter table profiles enable row level security;
 alter table exercises enable row level security;
 alter table workouts enable row level security;
 alter table workout_sets enable row level security;
+alter table workout_comments enable row level security;
 alter table groups enable row level security;
 alter table group_members enable row level security;
 alter table group_posts enable row level security;
@@ -86,8 +103,11 @@ create policy 'Users can update own profile' on profiles for update using ( auth
 create policy 'Exercises are viewable by everyone' on exercises for select using ( true );
 create policy 'Users can create custom exercises' on exercises for insert with check ( auth.uid() = created_by );
 
--- Workouts: Users can only view and edit their own workouts
+-- Workouts: Users can only view and edit their own workouts; Trainers can view their clients' workouts
 create policy 'Users can view own workouts' on workouts for select using ( auth.uid() = user_id );
+create policy 'Trainers can view clients workouts' on workouts for select using ( 
+  exists (select 1 from profiles where id = workouts.user_id and trainer_id = auth.uid()) 
+);
 create policy 'Users can insert own workouts' on workouts for insert with check ( auth.uid() = user_id );
 create policy 'Users can update own workouts' on workouts for update using ( auth.uid() = user_id );
 
@@ -95,6 +115,14 @@ create policy 'Users can update own workouts' on workouts for update using ( aut
 create policy 'Users can view own sets' on workout_sets for select using ( auth.uid() = (select user_id from workouts where id = workout_sets.workout_id) );
 create policy 'Users can insert own sets' on workout_sets for insert with check ( auth.uid() = (select user_id from workouts where id = workout_sets.workout_id) );
 create policy 'Users can update own sets' on workout_sets for update using ( auth.uid() = (select user_id from workouts where id = workout_sets.workout_id) );
+
+-- Workout Comments: Trainers can create comments, users can view comments on their workouts
+create policy 'Users can view comments on own workouts' on workout_comments for select using ( 
+  auth.uid() = (select user_id from workouts where id = workout_comments.workout_id) 
+);
+create policy 'Trainers can insert comments for clients' on workout_comments for insert with check ( 
+  exists (select 1 from profiles where id = (select user_id from workouts where id = workout_comments.workout_id) and trainer_id = auth.uid()) 
+);
 
 -- Groups: Anyone with invite code can join, members can view
 create policy 'Groups are viewable by members' on groups for select using (
@@ -113,4 +141,3 @@ create policy 'Members can view group posts' on group_posts for select using (
   exists (select 1 from group_members where group_id = group_posts.group_id and user_id = auth.uid())
 );
 create policy 'Users can create group posts' on group_posts for insert with check ( auth.uid() = user_id );
-
