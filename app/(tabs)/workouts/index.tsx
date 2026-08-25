@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '@/lib/supabase';
 
 interface Set {
   id: string;
@@ -18,6 +19,7 @@ interface Exercise {
 export default function WorkoutsScreen() {
   const [workoutName, setWorkoutName] = useState('Moja Posilňa');
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const addExercise = () => {
     const newExercise: Exercise = {
@@ -56,10 +58,78 @@ export default function WorkoutsScreen() {
     setExercises(exercises.map(ex => ex.id === exerciseId ? { ...ex, name } : ex));
   };
 
-  const finishWorkout = () => {
-    Alert.alert('Tréning ukončený!', 'Tvoj výkon bol uložený a odoslaný trenérovi. 💪');
-    setExercises([]);
-  };
+  async function finishWorkout() {
+    if (exercises.length === 0) {
+      Alert.alert('Chyba', 'Pridaj aspoň jedno cvičenie pred ukončím.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('Nie ste prihlásený.');
+
+      const { data: workout, error: workoutError } = await supabase
+        .from('workouts')
+        .insert([
+          { 
+            user_id: user.id, 
+            name: workoutName, 
+            completed_at: new Date().toISOString() 
+          }
+        ])
+        .select()
+        .single();
+
+      if (workoutError) throw workoutError;
+
+      const exerciseData = [];
+      for (const ex of exercises) {
+        let { data: existingEx } = await supabase
+          .from('exercises')
+          .select('id')
+          .ilike('name', ex.name)
+          .single();
+        
+        if (!existingEx) {
+          const { data: newEx, error: exError } = await supabase
+            .from('exercises')
+            .insert([{ name: ex.name, muscle_group: 'Unknown', is_custom: true, created_by: user.id }])
+            .select()
+            .single();
+          if (exError) throw exError;
+          existingEx = newEx;
+        }
+        exerciseData.push(existingEx);
+      }
+
+      const setsToInsert = [];
+      exercises.forEach((ex, idx) => {
+        const dbExId = exerciseData[idx]?.id;
+        ex.sets.forEach((set, sIdx) => {
+          setsToInsert.push({
+            workout_id: workout.id,
+            exercise_id: dbExId,
+            set_number: sIdx + 1,
+            reps: parseInt(set.reps) || 0,
+            weight: parseFloat(set.weight) || 0,
+          });
+        });
+      });
+
+      const { error: setsError } = await supabase.from('workout_sets').insert(setsToInsert);
+      if (setsError) throw setsError;
+
+      Alert.alert('Tréning ukončený!', 'Tvoj výkon bol uložený do Supabase a odoslaný trenérovi. 💪');
+      setExercises([]);
+      setWorkoutName('Moja Posilňa');
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Chyba pri ukladaní', error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -69,8 +139,16 @@ export default function WorkoutsScreen() {
           value={workoutName} 
           onChangeText={setWorkoutName}
         />
-        <TouchableOpacity style={styles.finishButton} onPress={finishWorkout}>
-          <Text style={styles.finishButtonText}>UKONČIŤ</Text>
+        <TouchableOpacity 
+          style={[styles.finishButton, loading && styles.buttonDisabled]} 
+          onPress={finishWorkout}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#000" size="small" />
+          ) : (
+            <Text style={styles.finishButtonText}>UKONČIŤ</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -159,6 +237,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   finishButtonText: {
     color: '#000',
