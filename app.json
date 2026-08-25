@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ApexFit",
-    "slug": "apex-fit",
+    "slug": "gym-fitness-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.radekparek.gymfitnesstracker"
+      "package": "com.radekparek.apexfit"
     },
     "web": {
       "bundler": "metro",
