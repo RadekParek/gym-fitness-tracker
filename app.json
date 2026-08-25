@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "gym-fitness-tracker",
-    "slug": "gym-fitness-tracker",
+    "name": "ApexFit",
+    "slug": "apex-fit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "gymfitnesstracker",
+    "scheme": "apexfit",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
