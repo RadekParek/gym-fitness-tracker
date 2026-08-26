@@ -2,6 +2,7 @@
   "expo": {
     "name": "ApexFit",
     "slug": "gym-fitness-tracker",
+    "owner": "jojok123s-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
