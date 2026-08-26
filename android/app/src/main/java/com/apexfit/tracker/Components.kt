@@ -65,7 +65,6 @@ fun ApexTextField(
                 .border(1.dp, Color(0xFF333333), RoundedCornerShape(8.dp))
                 .padding(16.dp)
         ) {
-            // Simplified text input for the architecture demo
             Text(
                 text = if (value.isEmpty()) "Enter ${label}..." else value,
                 color = if (value.isEmpty()) Color(0xFF666666) else Color.White
