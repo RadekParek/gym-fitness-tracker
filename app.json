@@ -35,13 +35,9 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
-        "projectId": "4d7fe412-0936-4b42-9d32-13221000a224"
+        "projectId": "7224f7e6-1b59-4b84-b2d1-19df0af2dc2c"
       }
-    },
-    "owner": "jojok123"
+    }
   }
 }
