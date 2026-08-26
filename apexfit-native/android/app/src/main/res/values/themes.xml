@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ApexFit" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary_neon_lime</item>
+        <item name="colorSecondary">@color/accent_electric_blue</item>
+        <item name="android:windowBackground">@color/bg_deep_charcoal</item>
+        <item name="android:statusBarColor">@color/bg_deep_charcoal</item>
+        <item name="android:navigationBarColor">@color/bg_deep_charcoal</item>
+    </style>
+</resources>
