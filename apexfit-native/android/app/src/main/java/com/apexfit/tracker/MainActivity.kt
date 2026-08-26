@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
+// ApexFit Final Build Trigger v1.1
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,9 +34,16 @@ class MainActivity : ComponentActivity() {
                         ProfileSetupScreen(onSetupComplete = { navController.navigate(Screen.Home.route) })
                     }
                     composable(Screen.Home.route) {
-                        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-                            // Home screen placeholder
-                        }
+                        HomeScreen(
+                            onStartWorkout = { navController.navigate("workout") },
+                            onOpenProfile = { navController.navigate(Screen.Profile.route) }
+                        )
+                    }
+                    composable("workout") {
+                        WorkoutScreen()
+                    }
+                    composable(Screen.Profile.route) {
+                        ProfileScreen(onBack = { navController.navigate(Screen.Home.route) })
                     }
                 }
             }
